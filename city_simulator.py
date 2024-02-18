@@ -22,6 +22,7 @@ class Car(SimulatedSprite):
         self.image = pygame.transform.rotate(self.image, 0)
         self.target = None
         self.round_trip = deque()
+        self.horizontal = True
 
     def update(self):
         if self.target is None:
@@ -33,8 +34,15 @@ class Car(SimulatedSprite):
 
             direction_x = self.target[0] - self.position[0]
             direction_y = self.target[1] - self.position[1]
-            self.update_position(diff_x=0 if direction_x == 0 else 1 * direction_x/abs(direction_x),
-                                 diff_y=0 if direction_y == 0 else 1 * direction_y / abs(direction_y))
+            self.update_position(diff_x=0 if direction_x == 0 else 0.5 * direction_x/abs(direction_x),
+                                 diff_y=0 if direction_y == 0 else 0.5 * direction_y / abs(direction_y))
+
+            if abs(direction_x) > abs(direction_y) and not self.horizontal:
+                self.image = pygame.transform.rotate(self.image, 90)
+                self.horizontal = True
+            if abs(direction_y) > abs(direction_x) and self.horizontal:
+                self.image = pygame.transform.rotate(self.image, 90)
+                self.horizontal = False
 
 
         self.rect = pygame.Rect(int(self.scene_position[0]), int(self.scene_position[1]), 15, 8)
@@ -91,13 +99,7 @@ sprites_list = pygame.sprite.Group()
 # init sprites etc.
 car1 = Car(30, 30)
 
-car1_destinations = deque()
-car1_destinations.append((300, 100))
-car1_destinations.append((400, 200))
-car1_destinations.append((240, 300))
-car1_destinations.append((0, 0))
 
-car1.round_trip = car1_destinations
 car2 = Car(300, 70, BLUE)
 car3 = Car(100, 240, GREEN)
 house1 = House(150, 65)
@@ -109,14 +111,27 @@ s1 = StreetNode(140, 123)
 s2 = StreetNode(290, 123)
 s3 = StreetNode(293, 225)
 
-car2.round_trip.append(s1.position)
-car2.round_trip.append(s2.position)
-car2.round_trip.append(s3.position)
+car1.round_trip.append(s1.position)
+car1.round_trip.append(s2.position)
+car1.round_trip.append(s3.position)
+
+car2.round_trip.append([309, 255])
+car2.round_trip.append([309, 123])
+car2.round_trip.append([319, 124])
+car2.round_trip.append([350, 124])
+car2.round_trip.append([369, 105])
+car2.round_trip.append([369, 63])
+car2.round_trip.append([350, 48])
+car2.round_trip.append([350, 64])
+car2.round_trip.append([353, 74])
+car2.round_trip.append([353, 105])
+car2.round_trip.append([350, 108])
+car2.round_trip.append([169, 108])
 
 s1.add_neighbor(s2)
 s2.add_neighbor(s3)
 
-street_nodes = create_streets([
+street_nodes, connection_sprites = create_streets([
     [[380, 105], [140, 105]],
     [[320, 45], [350, 45]],
     [[350, 135], [350, 45]],
@@ -147,7 +162,7 @@ for s in [
     Street(350, 45, angle=0, type=CORNER),
     Street(320, 45),
     House(330, 5)
-] + [StreetNodeSprite(s.position[0], s.position[1]) for s in list(street_nodes.values())]:
+] + [StreetNodeSprite(s.position[0], s.position[1]) for s in list(street_nodes.values())] + connection_sprites:
     sprites_list.add(s)
     game_sprites.append(s)
 

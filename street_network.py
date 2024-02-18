@@ -2,7 +2,7 @@ from queue import PriorityQueue
 from utils import SimulatedSprite
 import pygame
 from collections import deque
-from colors import RED
+from colors import *
 
 STREET = "street"
 CORNER = "street90"
@@ -24,6 +24,21 @@ class StreetNodeSprite(SimulatedSprite):
     def update(self):
         self.rect = pygame.Rect(self.scene_position[0], self.scene_position[1], 1, 1)
 
+
+class StreetNodeConnectionSprite(SimulatedSprite):
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(x1, y1)
+
+        self.position = [x1, y1]
+        self.width = x2 - x1
+        self.height = y2 - y1
+
+        self.image = pygame.Surface((self.width + 1, self.height + 1))
+        self.image.fill(BLUE)
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        self.rect = pygame.Rect(self.scene_position[0], self.scene_position[1], self.width + 1, self.height + 1)
 
 class StreetNode():
 
@@ -123,32 +138,47 @@ def create_streets(streets):
         else:
             streets.append(street)
 
+    connection_sprites = []
+
     # create street nodes
     street_nodes = {}
     for street in streets:
         street_node1, street_node2, street_node3, street_node4 = None, None, None, None
         if is_street_vertical(street):
-            street_node1 = StreetNode(street[0][0] + 3, street[0][1])
-            street_node2 = StreetNode(street[1][0] + 3, street[1][1] + 29)
+            street_node1 = StreetNode(street[0][0] + 3, street[0][1] + 29)
+            street_node2 = StreetNode(street[1][0] + 3, street[1][1])
 
-            street_node3 = StreetNode(street[0][0] + 19, street[0][1])
-            street_node4 = StreetNode(street[1][0] + 19, street[1][1] + 29)
+            street_node3 = StreetNode(street[0][0] + 19, street[0][1] + 18)
+            street_node4 = StreetNode(street[1][0] + 19, street[1][1])
 
             street_node1.add_neighbor(street_node2)
             street_node4.add_neighbor(street_node3)
+
+            connection_sprites.append(
+                StreetNodeConnectionSprite(street_node1.position[0], street_node1.position[1], street_node2.position[0],
+                                           street_node2.position[1]))
+            connection_sprites.append(
+                StreetNodeConnectionSprite(street_node3.position[0], street_node3.position[1], street_node4.position[0],
+                                           street_node4.position[1]))
         else:
-            street_node1 = StreetNode(street[0][0], street[0][1] + 19)
-            street_node2 = StreetNode(street[1][0] + 29, street[1][1] + 19)
+            street_node1 = StreetNode(street[0][0] + 29, street[0][1] + 19)
+            street_node2 = StreetNode(street[1][0], street[1][1] + 19)
 
-            street_node3 = StreetNode(street[0][0], street[0][1] + 3)
-            street_node4 = StreetNode(street[1][0] + 29, street[1][1] + 3)
+            street_node3 = StreetNode(street[0][0] + 29, street[0][1] + 3)
+            street_node4 = StreetNode(street[1][0], street[1][1] + 3)
 
             street_node1.add_neighbor(street_node2)
             street_node4.add_neighbor(street_node3)
+            connection_sprites.append(
+                StreetNodeConnectionSprite(street_node1.position[0], street_node1.position[1], street_node2.position[0],
+                                           street_node2.position[1]))
+            connection_sprites.append(
+                StreetNodeConnectionSprite(street_node3.position[0], street_node3.position[1], street_node4.position[0],
+                                           street_node4.position[1]))
         for street_node in [street_node1, street_node2, street_node3, street_node4]:
             street_nodes[pos_to_str(street_node.position)] = street_node
 
-    return street_nodes
+    return street_nodes, connection_sprites
 
 
 create_streets([
