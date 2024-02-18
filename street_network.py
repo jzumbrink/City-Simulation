@@ -40,15 +40,32 @@ class StreetNodeConnectionSprite(SimulatedSprite):
     def update(self):
         self.rect = pygame.Rect(self.scene_position[0], self.scene_position[1], self.width + 1, self.height + 1)
 
-class StreetNode():
+
+NO_TURN = 0
+WEST_SOUTH = 1
+SOUTH_EAST = 2
+EAST_NORTH = 3
+NORTH_WEST = 4
+WEST_NORTH = 5
+SOUTH_WEST = 6
+EAST_SOUTH = 7
+NORTH_EAST = 8
+WEST_TURN = 9
+SOUTH_TURN = 10
+EAST_TURN = 11
+NORTH_TURN = 12
+
+
+class StreetNode:
 
     def __init__(self, x, y):
 
         self.neighbors = []
         self.position = [x, y]
 
-    def add_neighbor(self, street_node):
-        self.neighbors.append(street_node)
+    def add_neighbor(self, street_node, direction):
+        self.neighbors.append([street_node, direction, abs(self.position[0] - street_node.position[0]) + abs(
+            self.position[1] - street_node.position[1])])
 
 
 class Street(SimulatedSprite):
@@ -139,20 +156,22 @@ def create_streets(streets):
             streets.append(street)
 
     connection_sprites = []
+    streets_sprites = []
 
     # create street nodes
     street_nodes = {}
+    intersection_nodes = {intersection_str: [None for _ in range(8)] for intersection_str in intersections_set}
     for street in streets:
         street_node1, street_node2, street_node3, street_node4 = None, None, None, None
         if is_street_vertical(street):
             street_node1 = StreetNode(street[0][0] + 3, street[0][1] + 29)
             street_node2 = StreetNode(street[1][0] + 3, street[1][1])
 
-            street_node3 = StreetNode(street[0][0] + 19, street[0][1] + 18)
+            street_node3 = StreetNode(street[0][0] + 19, street[0][1] + 29)
             street_node4 = StreetNode(street[1][0] + 19, street[1][1])
 
-            street_node1.add_neighbor(street_node2)
-            street_node4.add_neighbor(street_node3)
+            street_node1.add_neighbor(street_node2, NO_TURN)
+            street_node4.add_neighbor(street_node3, NO_TURN)
 
             connection_sprites.append(
                 StreetNodeConnectionSprite(street_node1.position[0], street_node1.position[1], street_node2.position[0],
@@ -160,6 +179,36 @@ def create_streets(streets):
             connection_sprites.append(
                 StreetNodeConnectionSprite(street_node3.position[0], street_node3.position[1], street_node4.position[0],
                                            street_node4.position[1]))
+
+            # find first intersection
+            for intersection in intersections:
+                if street[0][0] == intersection[0] and street[0][1] == intersection[1]:
+                    intersection_nodes[pos_to_str(intersection)][0] = street_node1
+                    intersection_nodes[pos_to_str(intersection)][1] = street_node3
+                    break
+            else:
+                # dead end
+                street_node3.add_neighbor(street_node1, NORTH_TURN)
+                connection_sprites.append(
+                    StreetNodeConnectionSprite(street_node3.position[0], street_node3.position[1],
+                                               street_node1.position[0],
+                                               street_node1.position[1]))
+                streets_sprites.append(Street(street[0][0], street[0][1], type=DEAD_END, angle=90))
+
+            # find second intersection
+            for intersection in intersections:
+                if street[1][0] == intersection[0] and street[1][1] == intersection[1]:
+                    intersection_nodes[pos_to_str(intersection)][5] = street_node2
+                    intersection_nodes[pos_to_str(intersection)][4] = street_node4
+                    break
+            else:
+                # dead end
+                street_node2.add_neighbor(street_node4, SOUTH_TURN)
+                connection_sprites.append(
+                    StreetNodeConnectionSprite(street_node2.position[0], street_node2.position[1],
+                                               street_node4.position[0],
+                                               street_node4.position[1]))
+                streets_sprites.append(Street(street[1][0], street[1][1], type=DEAD_END, angle=270))
         else:
             street_node1 = StreetNode(street[0][0] + 29, street[0][1] + 19)
             street_node2 = StreetNode(street[1][0], street[1][1] + 19)
@@ -167,18 +216,59 @@ def create_streets(streets):
             street_node3 = StreetNode(street[0][0] + 29, street[0][1] + 3)
             street_node4 = StreetNode(street[1][0], street[1][1] + 3)
 
-            street_node1.add_neighbor(street_node2)
-            street_node4.add_neighbor(street_node3)
+            street_node1.add_neighbor(street_node2, NO_TURN)
+            street_node4.add_neighbor(street_node3, NO_TURN)
             connection_sprites.append(
                 StreetNodeConnectionSprite(street_node1.position[0], street_node1.position[1], street_node2.position[0],
                                            street_node2.position[1]))
             connection_sprites.append(
                 StreetNodeConnectionSprite(street_node3.position[0], street_node3.position[1], street_node4.position[0],
                                            street_node4.position[1]))
+
+            # find first intersection
+            for intersection in intersections:
+                if street[0][0] == intersection[0] and street[0][1] == intersection[1]:
+                    intersection_nodes[pos_to_str(intersection)][2] = street_node1
+                    intersection_nodes[pos_to_str(intersection)][3] = street_node3
+                    break
+            else:
+                # dead end
+                street_node3.add_neighbor(street_node1, WEST_TURN)
+                connection_sprites.append(
+                    StreetNodeConnectionSprite(street_node3.position[0], street_node3.position[1],
+                                               street_node1.position[0],
+                                               street_node1.position[1]))
+                streets_sprites.append(Street(street[0][0], street[0][1], type=DEAD_END, angle=180))
+
+            # find second intersection
+            for intersection in intersections:
+                if street[1][0] == intersection[0] and street[1][1] == intersection[1]:
+                    intersection_nodes[pos_to_str(intersection)][7] = street_node2
+                    intersection_nodes[pos_to_str(intersection)][6] = street_node4
+                    break
+            else:
+                # dead end
+                street_node2.add_neighbor(street_node4, EAST_TURN)
+                connection_sprites.append(
+                    StreetNodeConnectionSprite(street_node4.position[0], street_node4.position[1],
+                                               street_node2.position[0],
+                                               street_node2.position[1]))
+                streets_sprites.append(Street(street[1][0], street[1][1], type=DEAD_END, angle=0))
         for street_node in [street_node1, street_node2, street_node3, street_node4]:
             street_nodes[pos_to_str(street_node.position)] = street_node
 
-    return street_nodes, connection_sprites
+    # make the sprites for all normal streets
+    for street in streets:
+        if is_street_vertical(street):
+            street_length = street[1][1] - street[0][1]
+            for i in range((street_length - 30)//30):
+                streets_sprites.append(Street(street[0][0], street[0][1] + 30 * (i+1), angle=90))
+        else:
+            street_length = street[1][0] - street[0][0]
+            for i in range((street_length - 30) // 30):
+                streets_sprites.append(Street(street[0][0] + 30 * (i + 1), street[0][1]))
+
+    return street_nodes, connection_sprites, streets_sprites
 
 
 create_streets([

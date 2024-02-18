@@ -128,41 +128,15 @@ car2.round_trip.append([353, 105])
 car2.round_trip.append([350, 108])
 car2.round_trip.append([169, 108])
 
-s1.add_neighbor(s2)
-s2.add_neighbor(s3)
-
-street_nodes, connection_sprites = create_streets([
+street_nodes, connection_sprites, street_sprites = create_streets([
     [[380, 105], [140, 105]],
     [[320, 45], [350, 45]],
     [[350, 135], [350, 45]],
     [[290, 105], [290, 225]]
 ])
 
-for i in range(5):
-    street = Street(140 + i * 30, 105)
-    sprites_list.add(street)
-    game_sprites.append(street)
 
-for i in range(4):
-    street = Street(290, 135 + i * 30)
-    street.rot90()
-    sprites_list.add(street)
-    game_sprites.append(street)
-
-corner_street = Street(290, 105, type=SMALL_JUNCTION)
-sprites_list.add(corner_street)
-game_sprites.append(corner_street)
-
-for s in [
-    Street(320, 105),
-    Street(350, 105, type=JUNCTION),
-    Street(380, 105),
-    Street(350, 75, angle=90),
-    Street(350, 135, angle=90),
-    Street(350, 45, angle=0, type=CORNER),
-    Street(320, 45),
-    House(330, 5)
-] + [StreetNodeSprite(s.position[0], s.position[1]) for s in list(street_nodes.values())] + connection_sprites:
+for s in street_sprites + [House(330, 5)] + [StreetNodeSprite(s.position[0], s.position[1]) for s in list(street_nodes.values())] + connection_sprites:
     sprites_list.add(s)
     game_sprites.append(s)
 
