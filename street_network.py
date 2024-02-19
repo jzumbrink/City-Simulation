@@ -1,9 +1,10 @@
-from queue import PriorityQueue
-from utils import SimulatedSprite
-import pygame
 from collections import deque
+
+import pygame
+
 from colors import *
 from turn_type import *
+from utils import SimulatedSprite
 
 STREET = "street"
 CORNER = "street90"
@@ -42,18 +43,28 @@ class StreetNodeConnectionSprite(SimulatedSprite):
         self.rect = pygame.Rect(self.scene_position[0], self.scene_position[1], self.width + 1, self.height + 1)
 
 
-
-
-
 class StreetNode:
 
     def __init__(self, x, y):
         self.neighbors = []
         self.position = [x, y]
+        self.has_supermarket_connection = False
 
     def add_neighbor(self, street_node, direction):
         self.neighbors.append([street_node, direction, abs(self.position[0] - street_node.position[0]) + abs(
             self.position[1] - street_node.position[1])])
+
+    def __eq__(self, other):
+        return self.position[0] == other.position[0] and self.position[1] == other.position[1]
+
+    def __int__(self):
+        return self.position[0] + self.position[1]
+
+    def __lt__(self, other):
+        return int(self) < int(other)
+
+    def __str__(self):
+        return pos_to_str(self.position)
 
 
 class Street(SimulatedSprite):
@@ -311,52 +322,3 @@ def create_streets(streets):
                 no_turn_intersection_connections.append((intersection_node[start].position, intersection_node[end].position))
 
     return street_nodes, connection_sprites, streets_sprites, intersection_connections, no_turn_intersection_connections
-
-
-create_streets([
-    [[410, 105], [140, 105]],
-    [[140, 105], [140, 135]],
-    [[320, 45], [350, 45]],
-    [[350, 135], [350, 45]],
-    [[290, 105], [290, 225]]
-])
-
-
-def dijkstra(g, start, target):
-    visited = set()
-    cost = {start: 0}
-    parent = {start: None}
-    pq = PriorityQueue()
-
-    pq.put((0, start))
-
-    while pq:
-        while not pq.empty():
-            _, vertex = pq.get()
-            if vertex not in visited: break
-        else:
-            break
-        visited.add(vertex)
-        if vertex == target:
-            break
-        for neighbor, distance in g[vertex]:
-            if neighbor not in visited:
-                old_cost = cost.get(neighbor, float('inf'))
-                new_cost = cost[vertex] + distance
-                if new_cost < old_cost:
-                    pq.put((new_cost, neighbor))
-                    cost[neighbor] = new_cost
-                    parent[neighbor] = vertex
-
-    return parent
-
-
-def make_path(parent, goal):
-    if goal not in parent:
-        return None
-    v = goal
-    path = []
-    while v is not None:
-        path.append(v)
-        v = parent[v]
-    return path[::-1]

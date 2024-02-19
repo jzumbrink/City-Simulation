@@ -13,3 +13,15 @@ class SimulatedSprite(pygame.sprite.Sprite):
         self.position[1] += diff_y
         self.scene_position[0] += diff_x
         self.scene_position[1] += diff_y
+
+    def set_position(self, x, y):
+        diff_x = x - self.position[0]
+        diff_y = y - self.position[1]
+        self.update_position(diff_x, diff_y)
+
+
+class Building(SimulatedSprite):
+
+    def __init__(self, starting_x, starting_y):
+        super().__init__(starting_x, starting_y)
+        self.nearest_street_node = None
