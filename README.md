@@ -4,8 +4,8 @@
 
 The structure of the street network is represented by "Street Nodes" that are unidirectionally connected to each other.  
 
-![random-driving-cars.PNG](documentation%2Frandom-driving-cars.PNG)
+![cars_going_shopping.PNG](documentation%2Fcars_going_shopping.PNG)
 
-This allows "cars" (colorful rectangles) to choose randomly at each intersection and thus driving endlessly around in the city.
+Cars are going grocery shopping at the local supermarket (ugly yellow building with the black cross on it) to keep the supplies of their household above a critical value.
 
 _(More to follow soon)_

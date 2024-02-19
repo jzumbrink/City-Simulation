@@ -83,27 +83,21 @@ class World:
         for house in self.houses:
             if house.car_parked and house.low_on_supplies():
                 house.car_parked = False
+                house.car.parked = False
                 # get new supplies
-                path_to_supermarket = shortest_path(house.nearest_street_node,
-                                                    lambda node: node.has_supermarket_connection)
-                last_vertex_str = None
-                last_position = None
-                for vertex_str in path_to_supermarket:
-                    turn = NO_TURN
-                    if last_vertex_str is None:
-                        turn = NO_TURN
-                    else:
-                        for neighbor, neighbor_turn, _ in self.street_nodes[last_vertex_str].neighbors:
-                            if str(neighbor) == vertex_str:
-                                turn = neighbor_turn
-                                break
+                house.car.drive_to(self.street_nodes, lambda node: node.has_supermarket_connection)
 
-                    house.car.add_target(str_to_pos(vertex_str), turn, last_position)
-                    last_vertex_str = vertex_str
-                    last_position = str_to_pos(vertex_str)
+    def simulate_cars(self):
+        for car in self.cars:
+            if car.target is None and not car.parked:
+                car_street_node = car
+                if self.street_nodes[car.nearest_street_node(self.street_nodes)].has_supermarket_connection:
+                    car.load_supplies()
+                    car.drive_home(self.street_nodes)
 
     def simulate_turn(self):
         self.simulate_houses()
+        self.simulate_cars()
 
 
 def create_example_world(street_nodes: list, connection_sprites: list, street_sprites: list) -> World:
@@ -113,8 +107,8 @@ def create_example_world(street_nodes: list, connection_sprites: list, street_sp
     city.add_sprite_list(street_sprites, city.street_sprites)
     if SHOW_STREET_NODES:
         city.add_sprite_list(connection_sprites, city.connection_sprites)
-    for street_node in street_nodes.values():
-        city.add_sprite(StreetNodeSprite(street_node.position[0], street_node.position[1]), city.street_node_sprites)
+        for street_node in street_nodes.values():
+            city.add_sprite(StreetNodeSprite(street_node.position[0], street_node.position[1]), city.street_node_sprites)
     city.align_houses_to_street_nodes()
 
     cars = [
