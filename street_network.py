@@ -59,7 +59,6 @@ NORTH_TURN = 12
 class StreetNode:
 
     def __init__(self, x, y):
-
         self.neighbors = []
         self.position = [x, y]
 
@@ -97,7 +96,7 @@ def is_street_vertical(street):
 
 
 def create_streets(streets):
-    #normalize streets
+    # normalize streets
     # first comes the most western and most northern point
     for street in streets:
         if street[0][0] > street[1][0] or street[0][1] > street[1][1]:
@@ -112,7 +111,6 @@ def create_streets(streets):
 
     positions = {}
 
-
     for street in streets:
         for position1, position2 in zip(street, street[::-1]):
             pos_str = pos_to_str(position1)
@@ -120,17 +118,17 @@ def create_streets(streets):
                 positions[pos_str] = []
             positions[pos_str].append(position2)
 
-
     intersections_set = set()
     for i, street1 in enumerate(streets):
-        for street2 in streets[i+1:]:
+        for street2 in streets[i + 1:]:
             # find intersection if possible
             if is_street_vertical(street1) != is_street_vertical(street2):
                 comp_street1, comp_street2 = street1, street2
                 if is_street_vertical(street2):
                     comp_street1, comp_street2 = street2, street1
                     # street1 is always the vertical one
-                if comp_street2[0][0] <= comp_street1[0][0] <= comp_street2[1][0] and comp_street1[0][1] <= comp_street2[0][1] <= comp_street1[1][1]:
+                if comp_street2[0][0] <= comp_street1[0][0] <= comp_street2[1][0] and comp_street1[0][1] <= \
+                        comp_street2[0][1] <= comp_street1[1][1]:
                     # there is an intersection
                     intersections_set.add(pos_to_str([comp_street1[0][0], comp_street2[0][1]]))
 
@@ -146,7 +144,8 @@ def create_streets(streets):
     while len(old_streets) > 0:
         street = old_streets.popleft()
         for intersection in intersections:
-            if (is_street_vertical(street) and street[0][0] == intersection[0] and street[0][1] < intersection[1] < street[1][1]
+            if (is_street_vertical(street) and street[0][0] == intersection[0] and street[0][1] < intersection[1] <
+                    street[1][1]
                     or street[0][1] == intersection[1] and street[0][0] < intersection[0] < street[1][0]):
                 # intersection splits street
                 old_streets.append([street[0], intersection])
@@ -190,9 +189,9 @@ def create_streets(streets):
                 # dead end
                 street_node3.add_neighbor(street_node1, NORTH_TURN)
                 connection_sprites.append(
-                    StreetNodeConnectionSprite(street_node3.position[0], street_node3.position[1],
-                                               street_node1.position[0],
-                                               street_node1.position[1]))
+                    StreetNodeConnectionSprite(street_node1.position[0], street_node1.position[1],
+                                               street_node3.position[0],
+                                               street_node3.position[1]))
                 streets_sprites.append(Street(street[0][0], street[0][1], type=DEAD_END, angle=90))
 
             # find second intersection
@@ -261,18 +260,73 @@ def create_streets(streets):
     for street in streets:
         if is_street_vertical(street):
             street_length = street[1][1] - street[0][1]
-            for i in range((street_length - 30)//30):
-                streets_sprites.append(Street(street[0][0], street[0][1] + 30 * (i+1), angle=90))
+            for i in range((street_length - 30) // 30):
+                streets_sprites.append(Street(street[0][0], street[0][1] + 30 * (i + 1), angle=90))
         else:
             street_length = street[1][0] - street[0][0]
             for i in range((street_length - 30) // 30):
                 streets_sprites.append(Street(street[0][0] + 30 * (i + 1), street[0][1]))
 
-    return street_nodes, connection_sprites, streets_sprites
+    intersection_connections = []
+    no_turn_intersection_connections = []
+
+    # make the sprites for the intersections and connect all the street nodes in the intersection
+    for intersection_str in intersections_set:
+        intersection_node = intersection_nodes[intersection_str]
+        intersection = str_to_pos(intersection_str)
+        count_none = 0
+        first_missing = None
+        last_missing = None
+        for i, street_intersection_node in enumerate(intersection_node):
+            if street_intersection_node is None:
+                count_none += 1
+                if first_missing is None:
+                    first_missing = i
+                last_missing = i
+
+        if count_none == 0:
+            streets_sprites.append(Street(intersection[0], intersection[1], type=JUNCTION))
+
+        if count_none == 2:
+            rotation = 0
+            if first_missing == 0:
+                rotation = 180
+            elif first_missing == 2:
+                rotation = 270
+            elif first_missing == 4:
+                rotation = 0
+            elif first_missing == 6:
+                rotation = 90
+            streets_sprites.append(Street(intersection[0], intersection[1], type=SMALL_JUNCTION, angle=rotation))
+
+        if count_none == 4:
+            rotation = 0
+            if first_missing == 0 and last_missing == 3:
+                rotation = 270
+            if first_missing == 0 and last_missing == 7:
+                rotation = 180
+            if first_missing == 2:
+                rotation = 0
+            if first_missing == 4:
+                rotation = 90
+            streets_sprites.append(Street(intersection[0], intersection[1], type=CORNER, angle=rotation))
+
+        for i, (start, end) in enumerate([(7, 0), (1, 2), (3, 4), (5, 6), (7, 4), (1, 6), (3, 0), (5, 2)]):
+            if intersection_node[start] is not None and intersection_node[end] is not None:
+                intersection_node[start].add_neighbor(intersection_node[end], i + 1)
+                intersection_connections.append((intersection_node[start].position, intersection_node[end].position))
+
+        for start, end in [(7, 2), (1, 4), (3, 6), (5, 0)]:
+            if intersection_node[start] is not None and intersection_node[end] is not None:
+                intersection_node[start].add_neighbor(intersection_node[end], NO_TURN)
+                no_turn_intersection_connections.append((intersection_node[start].position, intersection_node[end].position))
+
+    return street_nodes, connection_sprites, streets_sprites, intersection_connections, no_turn_intersection_connections
 
 
 create_streets([
-    [[380, 105], [140, 105]],
+    [[410, 105], [140, 105]],
+    [[140, 105], [140, 135]],
     [[320, 45], [350, 45]],
     [[350, 135], [350, 45]],
     [[290, 105], [290, 225]]

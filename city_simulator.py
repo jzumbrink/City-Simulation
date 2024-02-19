@@ -1,58 +1,14 @@
-from math import isclose
-
-from colors import *
+from car import Car
 from street_network import *
 from utils import SimulatedSprite
 
+show_street_nodes = True
 
 def update_camera_location(x_diff, y_diff):
     global game_sprites
     for game_sprite in game_sprites:
         game_sprite.scene_position[0] += x_diff
         game_sprite.scene_position[1] += y_diff
-
-class Car(SimulatedSprite):
-
-    def __init__(self, starting_x, starting_y, color=RED):
-        super().__init__(starting_x, starting_y)
-
-        self.image = pygame.Surface((15, 8))
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-        self.image = pygame.transform.rotate(self.image, 0)
-        self.target = None
-        self.round_trip = deque()
-        self.horizontal = True
-
-    def update(self):
-        if self.target is None:
-            if len(self.round_trip) > 0:
-                self.target = self.round_trip.popleft()
-        else:
-            if self.at_target() and len(self.round_trip) > 0:
-                self.target = self.round_trip.popleft()
-
-            direction_x = self.target[0] - self.position[0]
-            direction_y = self.target[1] - self.position[1]
-            self.update_position(diff_x=0 if direction_x == 0 else 0.5 * direction_x/abs(direction_x),
-                                 diff_y=0 if direction_y == 0 else 0.5 * direction_y / abs(direction_y))
-
-            if abs(direction_x) > abs(direction_y) and not self.horizontal:
-                self.image = pygame.transform.rotate(self.image, 90)
-                self.horizontal = True
-            if abs(direction_y) > abs(direction_x) and self.horizontal:
-                self.image = pygame.transform.rotate(self.image, 90)
-                self.horizontal = False
-
-
-        self.rect = pygame.Rect(int(self.scene_position[0]), int(self.scene_position[1]), 15, 8)
-
-    def rotate(self, angle):
-        self.image = pygame.transform.rotate(self.image, angle)
-        self.rect = self.image.get_rect(center=self.image.get_rect(center=(self.position[0], self.position[1])).center)
-
-    def at_target(self):
-        return self.target is not None and isclose(self.target[0], self.position[0]) and isclose(self.target[1], self.position[1])
 
 
 class House(SimulatedSprite):
@@ -111,34 +67,33 @@ s1 = StreetNode(140, 123)
 s2 = StreetNode(290, 123)
 s3 = StreetNode(293, 225)
 
-car1.round_trip.append(s1.position)
-car1.round_trip.append(s2.position)
-car1.round_trip.append(s3.position)
-
-car2.round_trip.append([309, 255])
-car2.round_trip.append([309, 123])
-car2.round_trip.append([319, 124])
-car2.round_trip.append([350, 124])
-car2.round_trip.append([369, 105])
-car2.round_trip.append([369, 63])
-car2.round_trip.append([350, 48])
-car2.round_trip.append([350, 64])
-car2.round_trip.append([353, 74])
-car2.round_trip.append([353, 105])
-car2.round_trip.append([350, 108])
-car2.round_trip.append([169, 108])
-
-street_nodes, connection_sprites, street_sprites = create_streets([
-    [[380, 105], [140, 105]],
+street_nodes, connection_sprites, street_sprites, intersection_connections, no_turn_intersection_connections = create_streets([
+    [[410, 105], [140, 105]],
+    [[410, 105], [410, 75]],
+    [[440, 75], [440, 45]],
+    [[470, 75], [410, 75]],
+    [[470, 75], [470, 225]],
+    [[470, 195], [530, 195]],
+    [[530, 105], [530, 225]],
     [[320, 45], [350, 45]],
     [[350, 135], [350, 45]],
     [[290, 105], [290, 225]]
 ])
 
+car1.round_trip.append(list(street_nodes.values())[0])
+car2.round_trip.append(list(street_nodes.values())[0])
+car3.round_trip.append(list(street_nodes.values())[0])
 
-for s in street_sprites + [House(330, 5)] + [StreetNodeSprite(s.position[0], s.position[1]) for s in list(street_nodes.values())] + connection_sprites:
+
+for s in street_sprites + [House(330, 5)]:
     sprites_list.add(s)
     game_sprites.append(s)
+
+if show_street_nodes:
+    for s in connection_sprites + [StreetNodeSprite(s.position[0], s.position[1]) for s in list(street_nodes.values())]:
+        sprites_list.add(s)
+        game_sprites.append(s)
+
 
 sprites_list.add(house1)
 sprites_list.add(house2)
@@ -166,6 +121,11 @@ while True:
     screen.fill(WHITE)
     sprites_list.update()
     sprites_list.draw(screen)
+    if show_street_nodes:
+        for intersection_connection in intersection_connections:
+            pygame.draw.line(screen, YELLOW, intersection_connection[0], intersection_connection[1])
+        for intersection_connection in no_turn_intersection_connections:
+            pygame.draw.line(screen, BROWN, intersection_connection[0], intersection_connection[1])
 
     # update window
     pygame.display.flip()
