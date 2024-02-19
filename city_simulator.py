@@ -2,7 +2,7 @@ from car import Car
 from street_network import *
 from utils import SimulatedSprite
 
-show_street_nodes = True
+show_street_nodes = False
 
 def update_camera_location(x_diff, y_diff):
     global game_sprites

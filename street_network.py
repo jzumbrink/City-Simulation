@@ -3,6 +3,7 @@ from utils import SimulatedSprite
 import pygame
 from collections import deque
 from colors import *
+from turn_type import *
 
 STREET = "street"
 CORNER = "street90"
@@ -41,19 +42,7 @@ class StreetNodeConnectionSprite(SimulatedSprite):
         self.rect = pygame.Rect(self.scene_position[0], self.scene_position[1], self.width + 1, self.height + 1)
 
 
-NO_TURN = 0
-WEST_SOUTH = 1
-SOUTH_EAST = 2
-EAST_NORTH = 3
-NORTH_WEST = 4
-WEST_NORTH = 5
-SOUTH_WEST = 6
-EAST_SOUTH = 7
-NORTH_EAST = 8
-WEST_TURN = 9
-SOUTH_TURN = 10
-EAST_TURN = 11
-NORTH_TURN = 12
+
 
 
 class StreetNode:
@@ -163,11 +152,11 @@ def create_streets(streets):
     for street in streets:
         street_node1, street_node2, street_node3, street_node4 = None, None, None, None
         if is_street_vertical(street):
-            street_node1 = StreetNode(street[0][0] + 3, street[0][1] + 29)
-            street_node2 = StreetNode(street[1][0] + 3, street[1][1])
+            street_node1 = StreetNode(street[0][0] + 4, street[0][1] + 29)
+            street_node2 = StreetNode(street[1][0] + 4, street[1][1])
 
-            street_node3 = StreetNode(street[0][0] + 19, street[0][1] + 29)
-            street_node4 = StreetNode(street[1][0] + 19, street[1][1])
+            street_node3 = StreetNode(street[0][0] + 18, street[0][1] + 29)
+            street_node4 = StreetNode(street[1][0] + 18, street[1][1])
 
             street_node1.add_neighbor(street_node2, NO_TURN)
             street_node4.add_neighbor(street_node3, NO_TURN)
@@ -209,11 +198,11 @@ def create_streets(streets):
                                                street_node4.position[1]))
                 streets_sprites.append(Street(street[1][0], street[1][1], type=DEAD_END, angle=270))
         else:
-            street_node1 = StreetNode(street[0][0] + 29, street[0][1] + 19)
-            street_node2 = StreetNode(street[1][0], street[1][1] + 19)
+            street_node1 = StreetNode(street[0][0] + 29, street[0][1] + 18)
+            street_node2 = StreetNode(street[1][0], street[1][1] + 18)
 
-            street_node3 = StreetNode(street[0][0] + 29, street[0][1] + 3)
-            street_node4 = StreetNode(street[1][0], street[1][1] + 3)
+            street_node3 = StreetNode(street[0][0] + 29, street[0][1] + 4)
+            street_node4 = StreetNode(street[1][0], street[1][1] + 4)
 
             street_node1.add_neighbor(street_node2, NO_TURN)
             street_node4.add_neighbor(street_node3, NO_TURN)
