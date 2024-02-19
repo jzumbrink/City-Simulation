@@ -10,7 +10,8 @@ clock = pygame.time.Clock()
 
 
 street_nodes, connection_sprites, street_sprites, intersection_connections, no_turn_intersection_connections = create_streets([
-    [[410, 105], [140, 105]],
+    [[410, 105], [80, 105]],
+    [[140, 105], [140, 75]],
     [[410, 105], [410, 75]],
     [[440, 75], [440, 45]],
     [[470, 75], [410, 75]],
@@ -45,9 +46,11 @@ while True:
     city.sprites_list.draw(screen)
     if SHOW_STREET_NODES:
         for intersection_connection in intersection_connections:
-            pygame.draw.line(screen, YELLOW, intersection_connection[0], intersection_connection[1])
+            pygame.draw.line(screen, YELLOW, city.position_to_camera_position(intersection_connection[0]),
+                             city.position_to_camera_position(intersection_connection[1]))
         for intersection_connection in no_turn_intersection_connections:
-            pygame.draw.line(screen, BROWN, intersection_connection[0], intersection_connection[1])
+            pygame.draw.line(screen, BROWN, city.position_to_camera_position(intersection_connection[0]),
+                             city.position_to_camera_position(intersection_connection[1]))
 
     # update window
     pygame.display.flip()

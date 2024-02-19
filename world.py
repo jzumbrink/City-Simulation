@@ -3,7 +3,7 @@ from car import Car
 from residential_house import ResidentialHouse
 from supermarket import Supermarket
 from colors import *
-from utils import SimulatedSprite
+from utils import SimulatedSprite, ParkingSpace
 from pathfinding import shortest_path
 from street_network import str_to_pos, StreetNodeSprite
 from settings import *
@@ -26,6 +26,11 @@ class World:
 
         self.street_nodes = []
 
+        self.camera_diff = [0, 0]
+
+    def position_to_camera_position(self, position):
+        return [position[0] + self.camera_diff[0], position[1] + self.camera_diff[1]]
+
     def add_sprite(self, sprite: SimulatedSprite, sprite_type: list):
         sprite_type.append(sprite)
         self.game_sprites.append(sprite)
@@ -41,6 +46,8 @@ class World:
         for game_sprite in self.game_sprites:
             game_sprite.scene_position[0] += x_diff
             game_sprite.scene_position[1] += y_diff
+        self.camera_diff[0] += x_diff
+        self.camera_diff[1] += y_diff
 
     def handle_key_event(self, event):
         if event.key == pygame.K_w:
@@ -69,8 +76,8 @@ class World:
             min_dist = None
             for street_node_str in self.street_nodes.keys():
                 street_node_position = str_to_pos(street_node_str)
-                if min_dist is None or abs(street_node_position[0] - building.position[0]) + abs(street_node_position[1] - building.position[1]) < min_dist:
-                    min_dist = abs(street_node_position[0] - building.position[0]) + abs(street_node_position[1] - building.position[1])
+                if min_dist is None or abs(street_node_position[0] - building.parking_space_position[0]) + abs(street_node_position[1] - building.parking_space_position[1]) < min_dist:
+                    min_dist = abs(street_node_position[0] - building.parking_space_position[0]) + abs(street_node_position[1] - building.parking_space_position[1])
                     min_street_node_str = street_node_str
             if min_street_node_str is not None:
                 building.nearest_street_node = self.street_nodes[min_street_node_str]
@@ -99,6 +106,10 @@ class World:
         self.simulate_houses()
         self.simulate_cars()
 
+    def add_parking_space(self, parking_space: ParkingSpace):
+        sx, sy = parking_space.street_access_position
+
+
 
 def create_example_world(street_nodes: list, connection_sprites: list, street_sprites: list) -> World:
     city = World()
@@ -121,7 +132,7 @@ def create_example_world(street_nodes: list, connection_sprites: list, street_sp
     ]
 
     houses = [
-        ResidentialHouse(150, 65),
+        ResidentialHouse(90, 65),
         ResidentialHouse(320, 210, angle=270),
         ResidentialHouse(150, 135, angle=180),
         ResidentialHouse(430, 210, angle=90),
@@ -134,8 +145,15 @@ def create_example_world(street_nodes: list, connection_sprites: list, street_sp
         city.add_sprite(house, city.houses)
         city.add_sprite(car, city.cars)
 
-    supermarket = Supermarket(560, 125)
-    city.add_sprite(supermarket, city.supermarkets)
+    supermarket1 = Supermarket(560, 125, angle=270)
+    city.add_sprite(supermarket1, city.supermarkets)
+
+
+    supermarket2 = Supermarket(170, 25)
+    city.add_sprite(supermarket2, city.supermarkets)
+
+    for parking_space in supermarket1.parking_spaces + supermarket2.parking_spaces:
+        city.add_sprite(StreetNodeSprite(parking_space.street_access_position[0], parking_space.street_access_position[1]), city.street_node_sprites)
 
     city.align_houses_to_street_nodes()
 

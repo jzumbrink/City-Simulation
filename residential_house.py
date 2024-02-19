@@ -16,16 +16,18 @@ MIN_SUPPLY_DECREASE = 0.2
 MAX_SUPPLY_DECREASE = 5
 MIN_SUPPLY_AMOUNT = 5000
 
+HOUSE_WIDTH = 40
+HOUSE_HEIGHT = 40
+
 
 class ResidentialHouse(Building):
 
     def __init__(self, x, y, angle=0):
-        super().__init__(x, y)
+        super().__init__(x, y, HOUSE_WIDTH, HOUSE_HEIGHT, angle)
 
         self.image = pygame.image.load("res/house.png")
         self.rect = self.image.get_rect()
         self.image = pygame.transform.rotate(self.image, angle)
-        self.angle = angle
         self.car = None
         self.car_parked = False
         self.supplies = START_SUPPLIES
@@ -47,7 +49,7 @@ class ResidentialHouse(Building):
             self.car.set_vertical()
 
     def update(self):
-        self.rect = pygame.Rect(self.scene_position[0], self.scene_position[1], 40, 40)
+        self.rect = pygame.Rect(self.scene_position[0], self.scene_position[1], HOUSE_WIDTH, HOUSE_HEIGHT)
         self.update_supplies()
 
     def update_supplies(self):
